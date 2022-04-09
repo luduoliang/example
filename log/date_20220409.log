@@ -1,0 +1,6 @@
+time=2022-04-09 14:34:04.021 level=error msg=加载配置文件失败 file=main.go:main.main:22
+time=2022-04-09 16:00:36.701 level=error msg=初始化sqlliteDB失败：Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub file=main.go:main.main:53
+time=2022-04-09 16:02:07.784 level=error msg=初始化sqlliteDB失败：Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub file=main.go:main.main:53
+time=2022-04-09 16:28:54.974 level=error msg=加载配置文件失败：XML syntax error on line 9: invalid character entity &parseTime (no semicolon) file=main.go:main.main:19
+time=2022-04-09 16:30:07.414 level=error msg=初始化mysqlDb失败：dial tcp 127.0.0.1:3306: connectex: No connection could be made because the target machine actively refused it. file=main.go:main.main:65
+time=2022-04-09 16:37:06.769 level=error msg=加载配置文件失败：XML syntax error on line 10: invalid character entity & (no semicolon) file=main.go:main.main:20

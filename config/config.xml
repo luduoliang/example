@@ -1,0 +1,22 @@
+<config>
+    <mongoUrl>mongodb://172.18.32.34:27017</mongoUrl>
+    <mongoDb>gateway</mongoDb>
+    <redisAddress>172.18.32.32:6379</redisAddress>
+    <redisPasswrod></redisPasswrod>
+    <redisDb>1</redisDb>
+    <boltDb>./database/bolt.db</boltDb>
+    <sqlliteDb>./database/sqllite.db</sqlliteDb>
+    <!--mysql连接串格式：root:root@/gin_test?charset=utf8mb4&parseTime=True&loc=Local-->
+    <!--其中的&需要替换成&amp;，不然xml解析不了-->
+    <mysqlDb>root:root@/test?charset=utf8mb4&amp;parseTime=True&amp;loc=Local</mysqlDb>
+    <!--本地http开启端口号-->
+    <httpPort>9600</httpPort>
+    <!--jwt密钥-->
+    <jwtSecretKey>123456</jwtSecretKey>
+    <!--jwt token过期小时-->
+    <jwtTokenExpriseHour>24</jwtTokenExpriseHour>
+    <testArray>
+        <testArrayItem>111</testArrayItem>
+        <testArrayItem>222</testArrayItem>
+    </testArray>
+</config>

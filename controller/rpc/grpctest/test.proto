@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option go_package = "../grpc_test";
+
+package test;
+
+
+service TestFirst {
+    rpc GetData(RequestFirst) returns (ResponseFirst){}
+    rpc Communite(stream RequestFirst) returns (stream ResponseFirst) {}
+}
+
+message RequestFirst {
+    string id = 1;
+}
+
+message ResponseFirst {
+    string code = 1;
+    string message = 2;
+    bytes data = 3;
+}
+

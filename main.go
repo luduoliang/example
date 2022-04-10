@@ -58,7 +58,7 @@ func main() {
 		return
 	}*/
 
-	//初始化sqllite数据库
+	//初始化mysql数据库
 	/*mysqlDb, err := orm.InitMysql(config.Cfg.MysqlDb)
 	defer func() {
 		if mysqlDb != nil {
@@ -94,13 +94,15 @@ func main() {
 	go router.InitHttpServer(config.Cfg.HttpPort)
 
 	//开启TCP服务端
-	go common.TcpServer(5555, 2048, func(data []byte) {
+	go common.TcpServer(5555, 2048, func(data []byte, conn net.Conn) {
 		fmt.Println(string(data))
+		fmt.Println(conn.RemoteAddr().String())
 	})
 
 	//开启UDP服务端
 	go common.UdpServer(6666, 2048, func(data []byte, client *net.UDPAddr) {
 		fmt.Println(string(data))
+		fmt.Println(fmt.Sprintf("%v:%v", client.IP.String(), client.Port))
 	})
 
 	//开启grpc服务端

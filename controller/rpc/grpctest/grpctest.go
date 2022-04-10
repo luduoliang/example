@@ -103,3 +103,110 @@ func IsNoDataError(err error) bool {
 	}
 	return false
 }
+
+/*
+grpc客户端使用方法
+main.go
+func main() {
+	go grpc_client.NewClient()
+	go func() {
+		for {
+			fmt.Println(grpc_client.Client)
+			if grpc_client.Stream != nil {
+				err := grpc_client.Stream.Send(&pb.RequestFirst{
+					Id: "9999",
+				})
+				if err != nil {
+					fmt.Printf(err.Error())
+				}
+
+			}
+
+			if grpc_client.Client != nil {
+				resp, err := grpc_client.Client.GetData(context.Background(), &pb.RequestFirst{
+					Id: "111",
+				})
+				if err != nil {
+					fmt.Printf(err.Error())
+				}
+				fmt.Println("resp", string(resp.Data))
+			}
+
+			time.Sleep(2 * time.Second)
+		}
+
+	}()
+
+	tiker := time.NewTicker(time.Minute * 30)
+	for {
+		<-tiker.C
+	}
+}
+
+
+client.go：
+var Conn *grpc.ClientConn
+var Client pb.TestFirstClient
+var Stream pb.TestFirst_CommuniteClient
+
+func NewClient() {
+	var err error
+connect_next:
+	fmt.Println("[grpc_client]开始初始化stream")
+	for {
+		Conn, err = grpc.Dial("127.0.0.1:7000", grpc.WithInsecure())
+		if err != nil {
+			fmt.Println("[grpc_client]创建grpc连接失败：", err)
+			return
+		}
+		Client = pb.NewTestFirstClient(Conn)
+		//ctx := context.Background()
+		ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
+		// 创建双向数据流
+		Stream, err = Client.Communite(ctx)
+		//创建流stream成功
+		if err == nil {
+			break
+		}
+
+		fmt.Println("[grpc_client]创建流stream失败：", err)
+		if Stream != nil {
+			Stream.CloseSend()
+		}
+		if Conn != nil {
+			Conn.Close()
+		}
+		time.Sleep(time.Second * 2)
+	}
+
+	fmt.Println("[grpc_client]初始化stream成功")
+	for {
+		in, err := Stream.Recv()
+		if err == io.EOF {
+			continue
+		}
+
+		//断线重连，重新创建流stream
+		if (err != nil) && (!isNoDataError(err)) {
+			goto connect_next
+		}
+		//处理消息
+		ProcessMessage(in)
+	}
+
+}
+
+//处理服务端发来的消息
+func ProcessMessage(in *pb.ResponseFirst) {
+	fmt.Println(in)
+}
+
+//判断是否是无数据错误
+func isNoDataError(err error) bool {
+	netErr, ok := err.(net.Error)
+	if ok && netErr.Timeout() && netErr.Temporary() {
+		return true
+	}
+	return false
+}
+*/

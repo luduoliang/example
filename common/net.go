@@ -100,7 +100,7 @@ func HttpGet(url string, params map[string]string, headers map[string]string) ([
 
 //建立TCP服务端，并接收处理返回
 //serverPort为服务端端口，buffSize为一次读取大小字节数，procFunc为接收到消息处理
-func TcpServer(serverPort int, buffSize int, procFunc func([]byte)) {
+func TcpServer(serverPort int, buffSize int, procFunc func([]byte, net.Conn)) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", serverPort))
 	if err != nil {
 		fmt.Println("TCP服务端监听端口失败：", err.Error())
@@ -122,7 +122,6 @@ func TcpServer(serverPort int, buffSize int, procFunc func([]byte)) {
 		//一个客户端开启一个线程处理
 		go func() {
 			var chanExit chan int = make(chan int, 1)
-			defer close(chanExit)
 
 			go func() {
 				//创建消息缓冲区
@@ -138,16 +137,13 @@ func TcpServer(serverPort int, buffSize int, procFunc func([]byte)) {
 					}
 
 					//处理客户端消息
-					procFunc(buffer[0:n])
+					procFunc(buffer[0:n], conn)
 				}
 			}()
 
 			select {
 			case <-chanExit:
 				fmt.Println(fmt.Sprintf("客户端：%v，断开连接", conn.RemoteAddr()))
-				if conn != nil {
-					conn.Close()
-				}
 				break
 			}
 		}()

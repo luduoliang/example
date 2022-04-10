@@ -186,3 +186,146 @@ func UdpServer(serverPort int, buffSize int, procFunc func([]byte, *net.UDPAddr)
 		procFunc(buffer[0:n], clientaAddr)
 	}
 }
+
+/*
+tcp客户端建立长连接方法
+
+func main() {
+	//断线重连
+relink:
+	//拨号远程地址，简历tcp连接
+	conn, err := net.Dial("tcp", "127.0.0.1:8888")
+	if err != nil {
+		fmt.Println(err)
+		if conn != nil {
+			conn.Close()
+		}
+		time.Sleep(2 * time.Second)
+		goto relink
+	}
+
+	//预先准备消息缓冲区
+	buffer := make([]byte, 1024)
+	//准备命令行标准输入
+	reader := bufio.NewReader(os.Stdin)
+
+	//断线控制
+	var connChan chan int = make(chan int, 1)
+
+	//写消息线程
+	go func() {
+		for {
+			lineBytes, _, _ := reader.ReadLine()
+			_, err := conn.Write(lineBytes)
+			if err != nil {
+				connChan <- 1
+				break
+			}
+		}
+	}()
+
+	//读消息线程
+	go func() {
+		for {
+			n, err := conn.Read(buffer)
+			if err != nil {
+				connChan <- 1
+				break
+			}
+			serverMsg := string(buffer[0:n])
+			fmt.Println("服务端msg", serverMsg)
+			if serverMsg == "bye" {
+				break
+			}
+		}
+	}()
+
+	select {
+	case <-connChan:
+		goto relink
+	}
+}
+
+UDP客户端建立方法
+func main() {
+	//udp服务端口号
+	udpAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%v", 7777))
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	udpClient, err := net.DialUDP("udp4", nil, udpAddr)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if udpClient != nil {
+		defer udpClient.Close()
+	}
+
+	//发消息
+	go func() {
+		for {
+			var msg MessageData
+			msg.MessageType = "1"
+			msg.MessageData = "1111111111"
+			var reqJSON, _ = json.Marshal(msg)
+
+			// 发送到服务端
+			_, err = udpClient.Write(reqJSON)
+			if err != nil {
+				fmt.Println("UDP=>", err, string(reqJSON))
+				break
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}()
+
+	//收消息
+	go func() {
+		for {
+			var data = make([]byte, 4096)
+			//接收客户端发送的数据
+			n, _, err := udpClient.ReadFromUDP(data)
+			if err != nil {
+				fmt.Println("failed read udp msg, error: " + err.Error())
+				continue
+			}
+			if n <= 0 {
+				fmt.Println("<0")
+				continue
+			}
+			fmt.Println("udp接收=>", n)
+
+			//解析数据
+			var msgData MessageData
+			defer func() {
+				err := recover()
+				if err != nil {
+				}
+			}()
+			err = json.Unmarshal(data[:n], &msgData)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Println("[收到的消息为]", msgData)
+
+			time.Sleep(time.Second * 2)
+		}
+
+	}()
+
+	tiker := time.NewTicker(time.Minute * 30)
+	for {
+		<-tiker.C
+	}
+}
+
+//消息格式
+type MessageData struct {
+	MessageType string `json:"message_type"`
+	MessageData string `json:"message_data"`
+}
+
+*/

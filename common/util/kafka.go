@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -231,4 +232,82 @@ func ShuffleArrayInt(arr []int) (newArr []int) {
 		newArr[i] = arr[i]
 	}
 	return
+}
+
+//kafka消费者
+func KafkaConsumer(topic string, partition int32, urls []string, procFunc func(*sarama.ConsumerMessage)) {
+	//配置
+	config := sarama.NewConfig()
+	//接收失败通知
+	config.Consumer.Return.Errors = true
+	//设置使用的kafka版本,如果低于V0_10_0_0版本,消息中的timestrap没有作用.需要消费和生产同时配置
+	config.Version = sarama.V0_11_0_0
+	//新建一个消费者
+	consumer, err := sarama.NewConsumer(urls, config)
+	if err != nil {
+		fmt.Println("error kafka get consumer")
+		return
+	}
+	defer consumer.Close()
+
+	//根据消费者获取指定的主题分区的消费者,Offset这里指定为获取最新的消息.
+	partitionConsumer, err := consumer.ConsumePartition(topic, partition, sarama.OffsetNewest)
+	if err != nil {
+		fmt.Println("error get partition consumer", err)
+		return
+	}
+	defer partitionConsumer.Close()
+
+	//循环等待接受消息.
+	for {
+		select {
+		//接收消息通道和错误通道的内容.
+		case msg := <-partitionConsumer.Messages():
+			procFunc(msg)
+		case err := <-partitionConsumer.Errors():
+			fmt.Println(fmt.Sprintf("topic:%v,partition:%v,err:%v", err.Topic, err.Partition, err.Err.Error()))
+		}
+	}
+}
+
+//kafka生产者：异步消息模式，即发送的消息不需要被消费，还可以再发其它消息
+func KafkaProducer(topic string, address []string, message interface{}) error {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.Timeout = 5 * time.Second
+	p, err := sarama.NewAsyncProducer(address, config)
+	if err != nil {
+		return err
+	}
+	defer p.Close()
+
+	messageByte, _ := json.Marshal(message)
+	msgProducer := &sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.ByteEncoder(messageByte),
+	}
+
+	p.Input() <- msgProducer
+	return nil
+}
+
+//kafka生产者：同步消息模式，即发送的消息必须被消费了以后才可以再发其它消息
+func KafkaSyncProducer(topic string, address []string, message interface{}) (int32, int64, error) {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.Timeout = 5 * time.Second
+	p, err := sarama.NewSyncProducer(address, config)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer p.Close()
+
+	messageByte, _ := json.Marshal(message)
+	msgProducer := &sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.ByteEncoder(messageByte),
+	}
+
+	part, offset, err := p.SendMessage(msgProducer)
+	return part, offset, err
 }

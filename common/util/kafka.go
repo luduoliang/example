@@ -60,7 +60,7 @@ func ConnectKafka(topic string, partition int, urls []string) (*kafka.Conn, erro
 }
 
 //发送kafka消息
-//urls为集群url地址列表，可以传单个
+//conn为kafka连接，message为发送的消息
 func SendKafkaMessage(conn *kafka.Conn, message interface{}) error {
 	// to produce messages
 	var bs []byte
@@ -77,7 +77,24 @@ func SendKafkaMessage(conn *kafka.Conn, message interface{}) error {
 	return nil
 }
 
-//接收kafka消息
+//读取kafka消息，每次都读取该topic下全量数据，读取过的数据下次还会再读取
+//conn为kafka连接，maxBytes一次最大读取字节数，procFunc为处理消息函数
+func ReadKafkaMessage(conn *kafka.Conn, maxBytes int, procFunc func(interface{})) {
+	// to produce messages
+	for {
+		//读取kafka消息，如果没有消息，则等待
+		m, err := conn.ReadMessage(maxBytes)
+		if err != nil {
+			fmt.Println("==========kafka read=========>", err)
+			time.Sleep(time.Second * 3)
+			continue
+		}
+		//处理接收到的消息
+		procFunc(m)
+	}
+}
+
+//接收kafka消息，增量读取，读取过的消息就不再读取了
 //urls为集群url地址列表，可以传单个
 //不停的读取数据,读到数据后传给procFunc处理
 func ReceiveKafkaMessage(topic string, groupId string, partition int, urls []string, procFunc func(interface{})) {

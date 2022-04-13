@@ -153,7 +153,7 @@ func TcpServer(serverPort int, buffSize int, procFunc func([]byte, net.Conn)) {
 
 //建立UDP服务端，并接收处理返回
 //serverPort为服务端端口，buffSize为一次读取大小字节数，procFunc为接收到消息处理
-func UdpServer(serverPort int, buffSize int, procFunc func([]byte, *net.UDPAddr)) {
+func UdpServer(serverPort int, buffSize int, procFunc func([]byte, *net.UDPConn, *net.UDPAddr)) {
 	udpAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf(":%v", serverPort))
 	if err != nil {
 		fmt.Println("udp服务端监听端口失败：", err.Error())
@@ -183,7 +183,7 @@ func UdpServer(serverPort int, buffSize int, procFunc func([]byte, *net.UDPAddr)
 		}
 
 		//处理客户端消息
-		procFunc(buffer[0:n], clientaAddr)
+		procFunc(buffer[0:n], conn, clientaAddr)
 	}
 }
 

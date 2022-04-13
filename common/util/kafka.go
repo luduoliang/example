@@ -12,9 +12,121 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+//连接kafka服务器,返回kafka连接
+func ConnectKafka(topic string, partition int, urls []string) (*kafka.Conn, error) {
+	// KAFKA列表IP为空
+	if len(urls) == 0 {
+		err := errors.New("kafka url list count == 0")
+		return nil, err
+	}
+
+	var kafkaList = make([]int, len(urls))
+	var i int
+	for i = 0; i < len(kafkaList); i++ {
+		kafkaList[i] = i
+	}
+	// 随机算法，打乱Kafka连接序号
+	kafkaList = ShuffleArrayInt(kafkaList)
+	for i = 0; i < len(kafkaList); i++ {
+		var url = urls[kafkaList[i]]
+		url = strings.TrimSpace(url)
+		if url == "" {
+			continue
+		}
+
+		//与kafka服务器建立连接
+		conn, err := kafka.DialLeader(context.Background(), "tcp", url, topic, partition)
+		if err != nil {
+			if conn != nil {
+				conn.Close()
+			}
+			fmt.Println("send topic=>", topic, "(", url, ") err=>", err.Error())
+			continue
+		}
+		//192.168.200.160 9092
+		err = conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		if err != nil {
+			if conn != nil {
+				conn.Close()
+			}
+			fmt.Println("SetWriteDeadline=>", topic, "(", url, ") err=>", err.Error())
+			continue
+		}
+		return conn, nil
+	}
+	//返回发送成功
+	return nil, errors.New("kafka初始化失败")
+}
+
 //发送kafka消息
 //urls为集群url地址列表，可以传单个
-func SendKafkaMessage(topic string, partition int, urls []string, message interface{}) (err error) {
+func SendKafkaMessage(conn *kafka.Conn, message interface{}) error {
+	// to produce messages
+	var bs []byte
+	bs, _ = json.Marshal(message)
+
+	n, err := conn.WriteMessages(kafka.Message{Value: bs})
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return fmt.Errorf("write data len is:%v", n)
+	}
+	//返回发送成功
+	return nil
+}
+
+//接收kafka消息
+//urls为集群url地址列表，可以传单个
+//不停的读取数据,读到数据后传给procFunc处理
+func ReceiveKafkaMessage(topic string, groupId string, partition int, urls []string, procFunc func(interface{})) {
+	if len(urls) == 0 {
+		fmt.Println("----------->未配置kafka url")
+		return
+	}
+	//初始化kafka
+init_kafka:
+	var r *kafka.Reader
+	brokers := urls
+	// make a new reader that consumes from topic-A
+	//传Partition每次是全量读取
+	/*r = kafka.NewReader(kafka.ReaderConfig{
+		Brokers: brokers,
+		GroupID: "c1",
+		//Partition:      partition,
+		Topic:          topic,
+		MinBytes:       10e3,        // 10KB
+		MaxBytes:       10e6,        // 10MB
+		CommitInterval: time.Second, // flushes commits to Kafka every second
+	})*/
+
+	r = kafka.NewReader(kafka.ReaderConfig{
+		Brokers:        brokers,
+		GroupID:        groupId,
+		Partition:      partition,
+		Topic:          topic,
+		MinBytes:       10e3,        // 10KB
+		MaxBytes:       10e6,        // 10MB
+		CommitInterval: time.Second, // flushes commits to Kafka every second
+	})
+	defer r.Close()
+
+	for {
+		//读取kafka消息，如果没有消息，则等待
+		m, err := r.ReadMessage(context.Background())
+		if err != nil {
+			fmt.Println("==========kafka Recv=========>", err)
+			time.Sleep(time.Second * 3)
+			goto init_kafka
+		}
+		//处理接收到的消息
+		procFunc(m)
+	}
+}
+
+//发送一次kafka消息，每发一条消息都会重新建立kafka连接，效率较底
+//urls为集群url地址列表，可以传单个
+func SendKafkaMessageOnce(topic string, partition int, urls []string, message interface{}) (err error) {
 	// to produce messages
 	var bs []byte
 	// KAFKA列表IP为空
@@ -41,8 +153,13 @@ func SendKafkaMessage(topic string, partition int, urls []string, message interf
 			continue
 		}
 
-		//与kafka服务串建立连接
+		//与kafka服务器建立连接
 		conn, err := kafka.DialLeader(context.Background(), "tcp", url, topic, partition)
+		defer func() {
+			if conn != nil {
+				conn.Close()
+			}
+		}()
 		if err != nil {
 			isSendKafkaSuccess = false
 			if conn != nil {
@@ -52,7 +169,15 @@ func SendKafkaMessage(topic string, partition int, urls []string, message interf
 			continue
 		}
 		//192.168.200.160 9092
-		conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		err = conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+		if err != nil {
+			isSendKafkaSuccess = false
+			if conn != nil {
+				conn.Close()
+			}
+			fmt.Println("SetWriteDeadline=>", topic, "(", url, ") err=>", err.Error())
+			continue
+		}
 
 		bs, _ = json.Marshal(message)
 
@@ -84,41 +209,6 @@ func SendKafkaMessage(topic string, partition int, urls []string, message interf
 
 	//返回发送成功
 	return nil
-}
-
-//接收kafka消息
-//urls为集群url地址列表，可以传单个
-//接收到数据后传给callback处理
-func ReceiveKafkakMessage(topic string, partition int, urls []string, callback func(interface{})) {
-	if len(urls) == 0 {
-		fmt.Println("----------->未配置kafka url")
-		return
-	}
-	var r *kafka.Reader
-	brokers := urls
-	// make a new reader that consumes from topic-A
-	//传Partition每次是全量读取
-	r = kafka.NewReader(kafka.ReaderConfig{
-		Brokers: brokers,
-		GroupID: "c1",
-		//Partition:      partition,
-		Topic:          topic,
-		MinBytes:       10e3,        // 10KB
-		MaxBytes:       10e6,        // 10MB
-		CommitInterval: time.Second, // flushes commits to Kafka every second
-	})
-	defer r.Close()
-
-	for {
-		//读取kafka消息，如果没有消息，则等待
-		m, err := r.ReadMessage(context.Background())
-		if err != nil {
-			fmt.Println("==========kafka Recv=========>", err)
-			break
-		}
-		callback(m)
-	}
-
 }
 
 //打乱数组元素

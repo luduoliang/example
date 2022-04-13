@@ -97,12 +97,14 @@ func main() {
 	go common.TcpServer(5555, 2048, func(data []byte, conn net.Conn) {
 		fmt.Println(string(data))
 		fmt.Println(conn.RemoteAddr().String())
+		conn.Write([]byte("test"))
 	})
 
 	//开启UDP服务端
-	go common.UdpServer(6666, 2048, func(data []byte, client *net.UDPAddr) {
+	go common.UdpServer(6666, 2048, func(data []byte, conn *net.UDPConn, addr *net.UDPAddr) {
 		fmt.Println(string(data))
-		fmt.Println(fmt.Sprintf("%v:%v", client.IP.String(), client.Port))
+		fmt.Println(fmt.Sprintf("%v:%v", addr.IP.String(), addr.Port))
+		conn.WriteToUDP([]byte("test"), addr)
 	})
 
 	//开启grpc服务端

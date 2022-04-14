@@ -25,12 +25,16 @@ func main() {
 	}
 
 	//初始化mongoDb
-	go common.InitMongo(config.Cfg.MongoUrl, config.Cfg.MongoDb)
+	err = common.InitMongo(config.Cfg.MongoUrl, config.Cfg.MongoDb)
+	if err != nil {
+		logrus.Errorf("初始化mongoDB失败：%v", err.Error())
+		return
+	}
 
 	//初始化redis
 	common.InitRedis(config.Cfg.RedisAddress, config.Cfg.RedisPasswrod, config.Cfg.RedisDb)
 
-	//初始化缓存
+	//初始化go-cache缓存
 	common.InitCache()
 
 	/*

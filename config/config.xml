@@ -4,8 +4,8 @@
     <redisAddress>172.18.32.32:6379</redisAddress>
     <redisPasswrod></redisPasswrod>
     <redisDb>1</redisDb>
-    <boltDb>./database/bolt.db</boltDb>
-    <sqlliteDb>./database/sqllite.db</sqlliteDb>
+    <boltDb>./config/database/bolt.db</boltDb>
+    <sqlliteDb>./config/database/sqllite.db</sqlliteDb>
     <!--mysql连接串格式：root:root@/gin_test?charset=utf8mb4&parseTime=True&loc=Local-->
     <!--其中的&需要替换成&amp;，不然xml解析不了-->
     <mysqlDb>root:root@/test?charset=utf8mb4&amp;parseTime=True&amp;loc=Local</mysqlDb>

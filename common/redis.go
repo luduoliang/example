@@ -23,7 +23,7 @@ func InitRedis(address string, password string, db int) {
 }
 
 //获取key
-func Get(key string) (string, error) {
+func RedisGet(key string) (string, error) {
 	if RedisClient == nil {
 		return "", errors.New("未创建redis连接")
 	}
@@ -36,7 +36,7 @@ func Get(key string) (string, error) {
 }
 
 //设置key
-func Set(key string, value interface{}, expire int) error {
+func RedisSet(key string, value interface{}, expire int) error {
 	if RedisClient == nil {
 		return errors.New("未创建redis连接")
 	}
@@ -60,7 +60,7 @@ func Set(key string, value interface{}, expire int) error {
 }
 
 //判断key是否存在
-func Exists(key string) (bool, error) {
+func RedisExists(key string) (bool, error) {
 	if RedisClient == nil {
 		return false, errors.New("未创建redis连接")
 	}
@@ -69,7 +69,7 @@ func Exists(key string) (bool, error) {
 }
 
 //删除key
-func Del(key string) error {
+func RedisDel(key string) error {
 	if RedisClient == nil {
 		return errors.New("未创建redis连接")
 	}
@@ -78,7 +78,7 @@ func Del(key string) error {
 }
 
 //redis HGET
-func HGet(key, field string) (string, error) {
+func RedisHGet(key, field string) (string, error) {
 	if RedisClient == nil {
 		return "", errors.New("未创建redis连接")
 	}
@@ -91,7 +91,7 @@ func HGet(key, field string) (string, error) {
 }
 
 //redis HSET
-func HSet(key string, field string, value interface{}) error {
+func RedisHSet(key string, field string, value interface{}) error {
 	if RedisClient == nil {
 		return errors.New("未创建redis连接")
 	}
@@ -104,7 +104,7 @@ func HSet(key string, field string, value interface{}) error {
 }
 
 //redis HEXISTS
-func HExists(key string, field string) (bool, error) {
+func RedisHExists(key string, field string) (bool, error) {
 	if RedisClient == nil {
 		return false, errors.New("未创建redis连接")
 	}
@@ -113,7 +113,7 @@ func HExists(key string, field string) (bool, error) {
 }
 
 //redis HDEL
-func HDel(key, field string) error {
+func RedisHDel(key, field string) error {
 	if RedisClient == nil {
 		return errors.New("未创建redis连接")
 	}
@@ -122,7 +122,7 @@ func HDel(key, field string) error {
 }
 
 //redis RPUSH
-func RPush(key string, value interface{}) error {
+func RedisRPush(key string, value interface{}) error {
 	if RedisClient == nil {
 		return errors.New("未创建redis连接")
 	}
@@ -140,7 +140,7 @@ func RPush(key string, value interface{}) error {
 }
 
 //redis RPOP
-func RPop(key string) (string, error) {
+func RedisRPop(key string) (string, error) {
 	if RedisClient == nil {
 		return "", errors.New("未创建redis连接")
 	}
@@ -153,7 +153,7 @@ func RPop(key string) (string, error) {
 }
 
 //redis LPUSH
-func LPush(key string, value interface{}) error {
+func RedisLPush(key string, value interface{}) error {
 	if RedisClient == nil {
 		return errors.New("未创建redis连接")
 	}
@@ -171,7 +171,7 @@ func LPush(key string, value interface{}) error {
 }
 
 //redis LPOP
-func LPop(key string) (string, error) {
+func RedisLPop(key string) (string, error) {
 	if RedisClient == nil {
 		return "", errors.New("未创建redis连接")
 	}
@@ -184,7 +184,7 @@ func LPop(key string) (string, error) {
 }
 
 //redis SETNX
-func SetNX(key string, value interface{}) error {
+func RedisSetNX(key string, value interface{}) error {
 	if RedisClient == nil {
 		return errors.New("未创建redis连接")
 	}
@@ -206,7 +206,7 @@ func SetNX(key string, value interface{}) error {
 }
 
 //redis GETSET
-func GetSet(key string, value interface{}) (string, error) {
+func RedisGetSet(key string, value interface{}) (string, error) {
 	if RedisClient == nil {
 		return "", errors.New("未创建redis连接")
 	}

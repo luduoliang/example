@@ -3,7 +3,6 @@ package common
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -13,46 +12,12 @@ import (
 )
 
 var (
-	MongoUrl      string          //mongo连接地址
-	MongoDb       string          //mongo数据库
 	MongoClient   *mongo.Client   // mongo客户端
 	MongoDatabase *mongo.Database // mongo数据库
 )
 
-//初始化mongoDb
-func InitMongo(mongoUrl string, mongoDb string) {
-	MongoUrl = mongoUrl
-	MongoDb = mongoDb
-	initTick := time.NewTicker(time.Duration(time.Minute * 60))
-	for {
-		InitMongoConnection(mongoUrl, mongoDb)
-		<-initTick.C
-	}
-}
-
-//初始化
-func InitMongoConnection(mongoUrl string, mongoDb string) {
-	if MongoClient == nil || MongoDatabase == nil {
-		if MongoClient != nil {
-			CloseMongo(MongoClient)
-		}
-		//初始化mongo连接
-		err := SetMongoDBConnectURL(mongoUrl, mongoDb)
-		if err != nil {
-			if MongoClient != nil {
-				CloseMongo(MongoClient)
-			}
-			MongoClient = nil
-			MongoDatabase = nil
-			fmt.Println("连接mongoDb失败！")
-		} else {
-			fmt.Println("mongoDb初始化成功！")
-		}
-	}
-}
-
 //建立mongo连接
-func SetMongoDBConnectURL(mongodbUrl string, databaseName string) (err error) {
+func InitMongo(mongodbUrl string, databaseName string) (err error) {
 	mongodbUrl = strings.TrimSpace(mongodbUrl)
 	databaseName = strings.TrimSpace(databaseName)
 	if mongodbUrl == "" {
@@ -99,7 +64,6 @@ func CloseMongo(client *mongo.Client) (err error) {
 //插入一条记录
 func AddOneMongo(tableName string, data interface{}) error {
 	if MongoDatabase == nil {
-		InitMongoConnection(MongoUrl, MongoDb)
 		return errors.New("MongoDatabase is nil")
 	}
 	mongoCollection := MongoDatabase.Collection(tableName)
@@ -108,10 +72,6 @@ func AddOneMongo(tableName string, data interface{}) error {
 	}
 
 	_, err := mongoCollection.InsertOne(context.TODO(), &data)
-	if err != nil {
-		MongoDatabase = nil
-		InitMongoConnection(MongoUrl, MongoDb)
-	}
 	return err
 }
 
@@ -121,7 +81,6 @@ func AddOneMongo(tableName string, data interface{}) error {
 func FindOneMongo(tableName string, filter bson.M) (interface{}, error) {
 	var info interface{}
 	if MongoDatabase == nil {
-		InitMongoConnection(MongoUrl, MongoDb)
 		return nil, errors.New("MongoDatabase is nil")
 	}
 	mongoCollection := MongoDatabase.Collection(tableName)
@@ -140,7 +99,6 @@ func FindOneMongo(tableName string, filter bson.M) (interface{}, error) {
 //filter示例：bson.M{"foo": "bar", "hello": "world", "pi": 3.14159}
 func UpdateOneMongo(tableName string, filter bson.M, updateData interface{}) error {
 	if MongoDatabase == nil {
-		InitMongoConnection(MongoUrl, MongoDb)
 		return errors.New("MongoDatabase is nil")
 	}
 	mongoCollection := MongoDatabase.Collection(tableName)
@@ -158,7 +116,6 @@ func UpdateOneMongo(tableName string, filter bson.M, updateData interface{}) err
 //用cursor.All(&list)解析数据，list := []People
 func FindMoreItems(tableName string, filter bson.M) (*mongo.Cursor, error) {
 	if MongoDatabase == nil {
-		InitMongoConnection(MongoUrl, MongoDb)
 		return nil, errors.New("MongoDatabase is nil")
 	}
 	mongoCollection := MongoDatabase.Collection(tableName)

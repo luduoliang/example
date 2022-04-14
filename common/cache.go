@@ -12,7 +12,7 @@ const (
 	CLEAR_CACHE_INTERVAL = 0 //自动缓存清理时间间隔，单位（秒）。为0表示不自动清理，等待缓存过期。
 )
 
-//初始化缓存
+//初始化go-cache缓存
 func InitCache() {
 	Cache = cache.New(time.Minute*30, time.Minute*30)
 	if Cache != nil {

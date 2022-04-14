@@ -33,42 +33,48 @@ func main() {
 	//初始化缓存
 	common.InitCache()
 
-	//初始化bolt数据库
-	/*boltDb, err := orm.InitBolt(config.Cfg.BoltDb)
-	defer func() {
-		if boltDb != nil {
-			boltDb.Sync()
-			boltDb.Close()
+	/*
+		//初始化bolt数据库
+		boltDb, err := model.InitBolt(config.Cfg.BoltDb)
+		defer func() {
+			if boltDb != nil {
+				boltDb.Sync()
+				boltDb.Close()
+			}
+		}()
+		if err != nil {
+			logrus.Errorf("初始化boltDB失败：%v", err.Error())
+			return
 		}
-	}()
-	if err != nil {
-		logrus.Errorf("初始化boltDB失败：%v", err.Error())
-		return
-	}
+	*/
 
-	//初始化sqllite数据库，sqllite只能在linux下打包运行，windows下跑不起来
-	sqlliteDb, err := orm.InitSqllite(config.Cfg.SqlliteDb)
-	defer func() {
-		if sqlliteDb != nil {
-			sqlliteDb.Close()
+	/*
+		//初始化sqllite数据库，sqllite只能在linux下打包运行，windows下跑不起来
+		sqlliteDb, err := model.InitSqllite(config.Cfg.SqlliteDb)
+		defer func() {
+			if sqlliteDb != nil {
+				sqlliteDb.Close()
+			}
+		}()
+		if err != nil {
+			logrus.Errorf("初始化sqlliteDB失败：%v", err.Error())
+			return
 		}
-	}()
-	if err != nil {
-		logrus.Errorf("初始化sqlliteDB失败：%v", err.Error())
-		return
-	}*/
+	*/
 
-	//初始化mysql数据库
-	/*mysqlDb, err := orm.InitMysql(config.Cfg.MysqlDb)
-	defer func() {
-		if mysqlDb != nil {
-			mysqlDb.Close()
+	/*
+		//初始化mysql数据库
+		mysqlDb, err := model.InitMysql(config.Cfg.MysqlDb)
+		defer func() {
+			if mysqlDb != nil {
+				mysqlDb.Close()
+			}
+		}()
+		if err != nil {
+			logrus.Errorf("初始化mysqlDb失败：%v", err.Error())
+			return
 		}
-	}()
-	if err != nil {
-		logrus.Errorf("初始化mysqlDb失败：%v", err.Error())
-		return
-	}*/
+	*/
 
 	//初始化定时任务
 	common.InitCron()
